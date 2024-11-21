@@ -52,7 +52,8 @@ class LoadOmoppedData(ABC):
     def convert_dataframe(self, data, direction='r_to_py'):
         """
         Converts a DataFrame between R and pandas.
-
+        source: https://rpy2.github.io/doc/latest/html/generated_rst/pandas.html
+        
         Parameters:
         - data: The DataFrame to convert.
         - direction: str, optional, either 'r_to_py' or 'py_to_r'.
