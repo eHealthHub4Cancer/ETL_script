@@ -28,7 +28,5 @@ def main():
         if file == "observation_period":
             fields = ['person_id', 'observation_period_id', 'observation_period_start_date', 'observation_period_end_date']
             
-
-
 if __name__ == "__main__":
     main()
