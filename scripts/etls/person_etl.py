@@ -1,7 +1,6 @@
 import pandas as pd
 import logging
 import uuid
-from snowflake import SnowflakeGenerator
 from typing import Optional
 from .main_etl import ETLEntity
 

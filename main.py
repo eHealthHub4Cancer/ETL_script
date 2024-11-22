@@ -1,5 +1,5 @@
-from scripts.person_etl import Person
-from scripts.load_person import LoadPerson
+from ETL_script.scripts.etls.person_etl import Person
+from ETL_script.scripts.loaders.load_person import LoadPerson
 import time
 
 import os
