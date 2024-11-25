@@ -15,20 +15,7 @@ class LoadPerson(LoadOmoppedData):
         """Load Person data into the OMOP Person table."""
         try:
             # Retrieve existing person_source_value records
-            query = f"SELECT person_source_value FROM {self._schema}.{self._table}"
-
-            # Assuming `_db_connector` is your OHDSI DatabaseConnector instance
-            queried_data = self._db_connector.querySql(
-                connection=self._conn,
-                sql=query
-            )
-
-            # Use the convert_dataframe method to convert R DataFrame to pandas DataFrame
-            queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
-
-            # Convert column names to lowercase
-            queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
-
+            queried_data_pandas = self.retrieve_persons()
             # Initialize an empty set and update with existing values
             existing_values = set(queried_data_pandas['person_source_value'])
 
@@ -38,7 +25,7 @@ class LoadPerson(LoadOmoppedData):
             ]
 
             if filtered_data.empty:
-                logging.info("No new data to insert; all records already exist in the target table.")
+                logging.info("No new data to insert for person; all records already exist in the target table.")
                 return
 
             # Convert the filtered pandas DataFrame back to an R DataFrame

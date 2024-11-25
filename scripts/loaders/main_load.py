@@ -84,3 +84,14 @@ class LoadOmoppedData(ABC):
         This method should be implemented by subclasses to handle specific OMOP tables.
         """
         pass
+
+    def retrieve_persons(self):
+        """Retrieve existing person records."""
+        query = f"SELECT person_source_value, person_id FROM {self._schema}.person"
+        queried_data = self._db_connector.querySql(
+            connection=self._conn,
+            sql=query
+        )
+        queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
+        queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
+        return queried_data_pandas
