@@ -25,11 +25,7 @@ class Person(ETLEntity):
             logging.error(f"Error during person data mapping: {e}")
 
     def _generate_person_ids(self):
-        def generate_id(person_source_id):
-            # Using a deterministic UUID version 5 based on a namespace and the person_source_id
-            namespace = uuid.NAMESPACE_DNS  # You can use any UUID namespace or define your own
-            return uuid.uuid5(namespace, person_source_id).int % (10**9)
-        self._source_data['person_id'] = self._source_data['id'].apply(generate_id)
+        self._source_data['person_id'] = self._source_data['id'].apply(self.unique_id_generator, source_type='person')
         
     def _map_gender(self):
         """Map gender to OMOP concepts."""

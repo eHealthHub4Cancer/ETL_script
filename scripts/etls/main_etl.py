@@ -52,6 +52,18 @@ class ETLEntity(ABC):
     def get_omopped_data(self):
         """Get the OMOP mapped data."""
         return self._omop_data
+    
+    def unique_id_generator(self, source_id, source_type):
+        """Generate a unique identifier.
+        Args:
+            source_id: str - This defines the source id from the table.
+            source_type: str - This defines the source type mainly the table name.
+        """
+
+        # Using a deterministic UUID version 5 based on a namespace and the person_source_id
+        namespace = uuid.NAMESPACE_DNS
+        namespace = uuid.uuid5(namespace, source_type)
+        return uuid.uuid5(namespace, source_id).int % (10**9)
 
     @abstractmethod
     def map_data(self):
