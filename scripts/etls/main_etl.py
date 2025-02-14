@@ -1,12 +1,24 @@
 import pandas as pd
 import logging
 import uuid
-from snowflake import SnowflakeGenerator
 from abc import ABC, abstractmethod
 from typing import Optional
+from tqdm import tqdm
+from cryptography import fernet as FR
+from dotenv import load_dotenv
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
+from Crypto.Util.Padding import pad, unpad
+import base64
+import os
+import hashlib
+
+load_dotenv()
+env_key=os.getenv('ENCRYPT_KEY')
+SECRET_KEY=hashlib.sha256(env_key.encode()).digest()[:16]
 
 class ETLEntity(ABC):
-    def __init__(self, file_path: str, fields_map: Optional[list] = None):
+    def __init__(self, file_path: str, table_name: str, fields_map: Optional[list] = None, chunk_size: int = 100000):
         """
         Initialise the AbstractEntity class.
         Args:
@@ -16,7 +28,8 @@ class ETLEntity(ABC):
         """
         self._path = file_path
         self._fields_map = fields_map if fields_map else []
-
+        self._chunk_size = chunk_size
+        self._target_table = table_name
         # Initialize data as DataFrames
         self._source_data = pd.DataFrame(columns=self._fields_map)
         self._omop_data = pd.DataFrame(columns=self._fields_map)
@@ -24,12 +37,20 @@ class ETLEntity(ABC):
     def load_data(self):
         """Load the source data from the file path."""
         try:
-            self._source_data = pd.read_csv(self._path).rename(columns=str.lower)
-            logging.info(f"Data loaded successfully from {self._path}")
+            chunks = pd.read_csv(self._path, chunksize=self._chunk_size, low_memory=False)
+            # list to hold chunk while loading.
+            df_list = []
+            for chunk in tqdm(chunks, desc=f"Reading CSV for {self._target_table} in chunks..."):
+                df_list.append(chunk)
+            self._source_data = pd.concat(df_list, ignore_index=True).rename(columns=str.lower)
+            logging.info(f"Data loaded successfully\n\n")
+        
         except FileNotFoundError:
             logging.error(f"File not found: {self._path}")
+        
         except pd.errors.ParserError:
             logging.error(f"Error parsing file: {self._path}")
+        
         except Exception as e:
             logging.error(f"Unexpected error loading data: {e}")
 
@@ -53,6 +74,38 @@ class ETLEntity(ABC):
         """Get the OMOP mapped data."""
         return self._omop_data
     
+    # Padding function to ensure fixed block size
+    def pad_message(self, message, block_size=16):
+        return message.ljust(block_size, ' ')  # Pad with spaces
+
+    def remove_non_alphanumeric(self, value):
+        import re
+        return re.sub(r'[^a-zA-Z0-9]+', '', value)
+
+    # Encrypt function
+    def encrypt_value(self, raw_data):
+        raw_data = raw_data.replace('-', '')
+        message = self.pad_message(raw_data)  # Ensure it's 16 bytes
+        cipher = AES.new(SECRET_KEY, AES.MODE_ECB)
+        encrypted_bytes = cipher.encrypt(message.encode('utf-8'))
+        
+        # Convert to base64 and ensure exactly 30 characters
+        encoded = base64.urlsafe_b64encode(encrypted_bytes).decode('utf-8')
+        return encoded  # Trim to exactly 30 characters
+
+    # Decrypt function
+    def decrypt_value(self, encrypted_data):
+
+        cipher = AES.new(SECRET_KEY, AES.MODE_ECB)
+        
+        # Fix base64 padding if needed
+        missing_padding = 4 - (len(encrypted_data) % 4)
+        encrypted_data += "=" * missing_padding  # Base64 padding fix
+        encrypted_bytes = base64.urlsafe_b64decode(encrypted_data)
+        
+        decrypted_message = cipher.decrypt(encrypted_bytes).decode('utf-8')
+        return decrypted_message.strip()  # Remove extra spaces
+    
     def unique_id_generator(self, source_id, source_type):
         """Generate a unique identifier.
         Args:
@@ -60,13 +113,13 @@ class ETLEntity(ABC):
             source_type: str - This defines the source type mainly the table name.
         """
 
-        # Using a deterministic UUID version 5 based on a namespace and the person_source_id
+        # Using a deterministic UUID version 5 based on a namespace and the source_id
         namespace = uuid.NAMESPACE_DNS
         namespace = uuid.uuid5(namespace, source_type)
         return uuid.uuid5(namespace, source_id).int % (10**9)
 
     @abstractmethod
-    def map_data(self):
+    def map_data(self, mapper: dict = {}):
         """Abstract method to map specific fields to OMOP format."""
         pass
 
