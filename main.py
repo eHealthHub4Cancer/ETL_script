@@ -1,40 +1,20 @@
-from scripts.etls.person_etl import Person
-from scripts.etls.observation_period_etl import ObservationPeriod
-from scripts.loaders.load_person import LoadPerson
-from scripts.loaders.load_obser_period import LoadObservationPeriod
-import time
+from mappers.synthea_mapper import SyntheaETLPipeline
+from mappers.custom_mapper import CustomETLPipeline
+from mappers.main_mapper import BaseETLPipeline
 
+# import dotenv
+from dotenv import load_dotenv
 import os
+load_dotenv()
 
 def main():
-    # load file directory.
-    file_dir = "C:/Users/23434813/Desktop/synthea_dataset/csv"
+    mapper_class = os.getenv("MAPPER_CLASS")
+    if mapper_class:
+        etl = SyntheaETLPipeline()
+    else:
+        etl = CustomETLPipeline()
+    
+    etl.run()
 
-    files_to_map = {"person": "patients.csv", 
-                    "observation_period": "conditions.csv"}
-
-    for file, file_name in files_to_map.items():
-        file_path = os.path.join(file_dir, file_name)
-        if file == "person":
-            fields = ['person_id', 'gender_concept_id', 'year_of_birth', 'month_of_birth', 'day_of_birth', 'race_concept_id',
-                    'ethnicity_concept_id', 'person_source_value', 'gender_source_value', 'gender_source_concept_id',
-                    'race_source_value', 'ethnicity_source_value']
-            person_data = Person(file_path=file_path, fields_map=fields)
-            person_data.run_mapping(fields=fields)
-            load_result = LoadPerson("postgresql", "localhost", "postgres", "postgres", "ohdsi_tutorial", "C:/Users/23434813/Desktop/AML data/ohdsi/", 
-                                        "ohdsi", person_data.get_omopped_data(), file, 5442)
-            
-            load_result.load_data()
-            time.sleep(2)
-            print("done\n\n")
-
-        if file == "observation_period":
-            fields = ['observation_period_id', 'observation_period_start_date', 'observation_period_end_date', 'patient', 'period_type_concept_id']
-            obser_data = ObservationPeriod(file_path=file_path, fields_map=fields)
-            obser_data.run_mapping(fields=fields)
-            load_result = LoadObservationPeriod("postgresql", "localhost", "postgres", "postgres", "ohdsi_tutorial", "C:/Users/23434813/Desktop/AML data/ohdsi/", 
-                                        "ohdsi", obser_data.get_omopped_data(), file, 5442)
-            load_result.load_data()
-         
 if __name__ == "__main__":
     main()

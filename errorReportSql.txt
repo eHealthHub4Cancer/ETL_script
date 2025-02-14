@@ -2,14 +2,19 @@ DBMS:
 postgresql
 
 Error:
-org.postgresql.util.PSQLException: ERROR: column "person_source_value" does not exist
-  Position: 8
+org.postgresql.util.PSQLException: ERROR: column "visit_occurrence.visit_occurrence_id" must appear in the GROUP BY clause or be used in an aggregate function
+  Position: 19
 
 SQL:
-SELECT person_source_value, person_id FROM ohdsi.observation_period
+
+        SELECT person_id, visit_occurrence_id, MIN(visit_start_date), 
+        MAX(visit_end_date) 
+        FROM aml_practice.visit_occurrence
+        GROUP BY person_id
+        
 
 R version:
-R version 4.3.3 (2024-02-29 ucrt)
+R version 4.4.2 (2024-10-31 ucrt)
 
 Platform:
 x86_64-w64-mingw32
@@ -25,7 +30,8 @@ Attached base packages:
 - base
 
 Other attached packages:
+- arrow (17.0.0.1)
 - CommonDataModel (1.0.1)
 - rJava (1.0-11)
-- SqlRender (1.19.0)
+- SqlRender (1.19.1)
 - DatabaseConnector (6.3.2)
