@@ -45,7 +45,7 @@ class LoadCondition(LoadOmoppedData):
             filtered_data = filtered_data.merge(queried_concepts, left_on='condition_source_concept_id', right_on='concept_code', how='inner')            
             # set condition concept id.
             filtered_data['condition_concept_id'] = filtered_data['concept_id']
-            filtered_data['condition_source_concept_id'] = filtered_data['condition_concept_id']
+            filtered_data['condition_source_concept_id'] = filtered_data['condition_source_concept_id'].astype(int)
 
             # drop columns that are not needed 
             filtered_data.drop(columns=['person_source_value', 'visit_source_value', 'concept_code', 'vocabulary_id', 'concept_id'], inplace=True)            

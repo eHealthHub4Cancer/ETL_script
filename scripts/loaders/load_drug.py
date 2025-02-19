@@ -39,21 +39,16 @@ class LoadDrug(LoadOmoppedData):
             # merge
             filtered_data = filtered_data.merge(queried_visits, on='visit_source_value', how='inner')
             # existing visit details
-            queried_visit_details = query_utils.retrieve_visit_details()
-            # merge
-            filtered_data = filtered_data.merge(queried_visit_details, on='visit_detail_source_value', how='inner')
-            # retrieve concepts
+            # # retrieve concepts
             queried_concepts = query_utils.retrieve_concepts()
             # get only snomed vocabularies
             queried_concepts = queried_concepts[queried_concepts['vocabulary_id'].isin(['RxNorm', 'CVX'])]
             # merge based on concept code.
-            filtered_data['drug_source_concept_id'] = filtered_data['drug_source_concept_id'].astype(str)
-            filtered_data = filtered_data.merge(queried_concepts, left_on='drug_source_concept_id', right_on='concept_code', how='inner')            
-            # set drug concept id.
-            filtered_data['drug_concept_id'] = filtered_data['concept_id']
-            filtered_data['drug_source_concept_id'] = filtered_data['drug_concept_id']
+            queried_concepts = queried_concepts.set_index('concept_code').to_dict()['concept_id']
+            # map the concept ids
+            filtered_data['drug_concept_id'] = filtered_data['drug_source_concept_id'].astype(str).map(queried_concepts)
             # drop columns that are not needed 
-            filtered_data.drop(columns=['person_source_value', 'visit_source_value', 'concept_code', 'vocabulary_id', 'concept_id'], inplace=True)            
+            filtered_data.drop(columns=['person_source_value', 'visit_source_value'], inplace=True)            
             # only keep the columns that are not duplicates
             filtered_data = filtered_data.drop_duplicates(subset=['drug_exposure_id'], keep='first')
             # push the filtered data to the database
