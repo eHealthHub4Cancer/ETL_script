@@ -163,3 +163,5 @@ myenv
 *feather
 *r_*
 python_code
+!*r_etl*
+!*r_etl*
