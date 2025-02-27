@@ -7,14 +7,14 @@ from .main_etl import ETLEntity
 class CareSite(ETLEntity):
     
     def map_data(self, mapper = {}):
-        """Map the specific fields for the Person entity."""
+        """Map the specific fields for the Care site entity."""
         try:
             self._generate_ids()
             self._set_source_values()
             
-            logging.info("Visit Occurrence data mapped successfully.")
+            logging.info("Care site data mapped successfully.")
         except Exception as e:
-            logging.error(f"Error during Visit Occurrence data mapping: {e}")
+            logging.error(f"Error during care site data mapping: {e}")
             
     def _generate_ids(self):
         self._source_data['zip'] = self._source_data['zip'].astype(str)

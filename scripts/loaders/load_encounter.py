@@ -36,12 +36,12 @@ class LoadEncounter(LoadOmoppedData):
             # get the providers
             queried_providers = query_utils.retrieve_providers()
             # merge the data
-            filtered_data = filtered_data.merge(queried_providers, on='provider_source_value', how='inner')
+            filtered_data = filtered_data.merge(queried_providers, on='provider_source_value', how='left')
             # drop columns that are not needed
             # merge with care sites
             queried_care_sites = query_utils.retrieve_care_sites()
             # merge the data
-            filtered_data = filtered_data.merge(queried_care_sites, on='care_site_source_value', how='inner')
+            filtered_data = filtered_data.merge(queried_care_sites, on='care_site_source_value', how='left')
             filtered_data.drop(columns=['provider_source_value', 'care_site_source_value'], inplace=True)
 
             # check if there are new records to insert

@@ -27,7 +27,11 @@ class BaseETLPipeline:
     
     def process_file(self, file, file_name, etl_mapping, custom: bool = False):
         if file in etl_mapping:
-            etl_class, loader_class, fields = etl_mapping[file]
+            get_file = file
+            file = file.rsplit("_", 1)[0]
+            etl_class, loader_class, fields = etl_mapping[get_file]
+
+            
             file_path = os.path.join(self.file_path, file_name[0])
             print(f"Loading {file} data...")
             if custom:

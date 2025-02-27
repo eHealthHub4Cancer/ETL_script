@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)  # Use DEBUG level for detailed logging
 
 class LoadDeath(LoadOmoppedData):
     def load_data(self):
-        """Load encounter data into the OMOP visit occurrence table."""
+        """Load death data into death table."""
         try:
             query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader())
             # retrieve person records

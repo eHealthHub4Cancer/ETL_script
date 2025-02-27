@@ -6,15 +6,15 @@ from .main_etl import ETLEntity
 
 class DrugExposure(ETLEntity):
     def map_data(self, mapper = {}):
-        """Map the specific fields for the Observation period table"""
+        """Map the specific fields for the Drug Exposure table"""
         try:
             self._generate_ids()
             self._handle_dates()
             self._set_source_values()
             
-            logging.info("Observation period data mapped successfully.")
+            logging.info("Drug Exposure data mapped successfully.")
         except Exception as e:
-            logging.error(f"Error during observation period data mapping: {e}")  
+            logging.error(f"Error during Drug Exposure data mapping: {e}")  
 
     def _set_source_values(self):
         """Set source values for OMOP mapping."""
