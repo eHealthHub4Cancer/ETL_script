@@ -31,16 +31,17 @@ class LoadVisitDetails(LoadOmoppedData):
                 ~self._omopped_data['visit_detail_id'].isin(existing_details)
             ]
             # check if there are new records to insert
-            if filtered_data.empty:
-                logging.info("No new data to insert for visit occurrence; all records already exist in the target table.")
-                return
-            
             queried_visits = query_utils.retrieve_visits()
             sorted_data = filtered_data.sort_values(by='visit_source_value')
             # get the unique visit source values
             sorted_visits = queried_visits.sort_values(by='visit_source_value')
             # merge
             filtered_data = sorted_data.merge(sorted_visits, on='visit_source_value', how='inner')
+            
+            if filtered_data.empty:
+                logging.info("No new data to insert for visit occurrence; all records already exist in the target table.")
+                return
+            
             # convert the visit detail source concept id to string
             filtered_data['visit_detail_concept_id'] = filtered_data['visit_detail_concept_id'].astype(str)
             # get unique codes

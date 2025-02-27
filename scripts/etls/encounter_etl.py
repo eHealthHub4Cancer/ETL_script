@@ -70,8 +70,6 @@ class Encounters(ETLEntity):
         self._source_data['new_visit'] = (self._source_data['visit_gap'] > gap_threshold).astype(int)
         self._source_data['new_visit'] = self._source_data['new_visit'].cumsum()
 
-        print(self._source_data)
-
         self._source_data = self._source_data.groupby(['person_source_value', 'visit_concept_id', 'new_visit']).agg(
             visit_start_date = ('visit_start_date', 'min'),
             visit_end_date = ('visit_end_date', 'max'),
@@ -82,4 +80,4 @@ class Encounters(ETLEntity):
             care_site_source_value = ('care_site_source_value', 'first'),
             provider_source_value = ('provider_source_value', 'first'),
             visit_source_value = ('visit_source_value', 'first')
-        ).reset_index(drop=True)
+        ).reset_index()
