@@ -7,6 +7,7 @@ import rpy2.robjects as ro
 from rpy2.robjects.packages import importr
 from rpy2.robjects import pandas2ri
 import pyarrow.feather as feather
+from collections import defaultdict
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)  # Use DEBUG level for detailed logging
@@ -308,3 +309,96 @@ class QueryUtils:
             queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'observation')
         
         return queried_data_pandas
+    
+    def group_list(self, n_list):
+        """Group a list of values into a string."""
+        output = ', '.join(f"'{v}'" for v in n_list)
+        return output
+    
+    def run_query(self, query):
+        """Run a query and return the result."""
+        queried_data = self._db_connector.querySql(
+            connection=self._conn,
+            sql=query
+        )
+        queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
+        
+        if queried_data_pandas.empty:
+            return {}
+
+        # make sure the column names are all lower case.
+        queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
+
+        return queried_data_pandas.set_index('concept_code').to_dict()['concept_id']
+
+    
+    def retrieve_concept_id(self, code, vocabulary):
+        """ Retrieve concept id given the code"""
+
+        vocab_list = self.group_list(vocabulary)
+        code_list = self.group_list(code)
+
+        # step 1: Query standard concepts directly
+        get_standard_concept_id = f"""
+        SELECT concept_id, concept_code 
+        FROM {self._schema}.concept 
+        WHERE concept_code IN ({code_list}) 
+        AND standard_concept = 'S'
+        """
+
+        concept_id_map = self.run_query(get_standard_concept_id)
+        
+        # step 2: check if all codes are in the standard concepts
+        # using set difference
+        missing_codes = set(code) - set(concept_id_map.keys())
+
+        if not missing_codes:
+            return concept_id_map
+        
+        # step 3: Query non-standard concepts
+        code_list = self.group_list(missing_codes)
+        get_non_standard_concept_id = f"""
+        SELECT c2.concept_id, c1.concept_code 
+        FROM {self._schema}.concept c1 
+        JOIN {self._schema}.concept_relationship cr ON c1.concept_id = cr.concept_id_1 
+        JOIN {self._schema}.concept c2 ON cr.concept_id_2 = c2.concept_id 
+        WHERE c1.concept_code IN ({code_list}) 
+        AND c1.vocabulary_id IN ({vocab_list}) 
+        AND cr.relationship_id = 'Maps to' 
+        AND c2.standard_concept = 'S'
+        """
+
+        # run the query
+        concept_id_map_2 = self.run_query(get_non_standard_concept_id)
+
+        concept_id_map.update(concept_id_map_2)
+        # get the missing codes
+        missing_codes = set(code) - set(concept_id_map.keys())
+        # if there are still missing codes, update them with 0 concept ids
+        concept_map = dict.fromkeys(missing_codes, 0) | concept_id_map
+
+        return {k: int(v) for k, v in concept_map.items() if k in code}
+        
+    def retrieve_source_concept_id(self, code, vocabulary):
+        """ Retrieve source concept id given the code and vocabulary"""
+        
+        vocab_list = ', '.join(f"'{v}'" for v in vocabulary)
+        code_list = ', '.join(f"'{v}'" for v in code)
+
+        get_concept_id = f"""
+        SELECT concept_id, concept_code
+        FROM {self._schema}.concept 
+        WHERE concept_code IN ({code_list}) 
+        AND vocabulary_id IN ({vocab_list}) 
+        """
+        concept_id_map = self.run_query(get_concept_id)
+
+        missing_codes = set(code) - set(concept_id_map.keys())
+        # if there are still missing codes, update them with 0 concept ids
+        concept_map = dict.fromkeys(missing_codes, 0) | concept_id_map
+
+        return {k: int(v) for k, v in concept_map.items() if k in code}
+    
+    def strip_length(self, data, length = 50):
+        """strip the length of the data."""
+        return data[:length]

@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)  # Use DEBUG level for detailed logging
 
 class LoadProvider(LoadOmoppedData):
     def load_data(self):
-        """Load encounter data into the OMOP visit occurrence table."""
+        """Load provider data."""
         try:
             query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader())
             # retrieve past providers.
@@ -23,13 +23,15 @@ class LoadProvider(LoadOmoppedData):
             existing_providers = set(queried_providers['provider_id'])
             queried_care_sites = query_utils.retrieve_care_sites()
             # merge the data
-            self._omopped_data = self._omopped_data.merge(queried_care_sites, on='care_site_source_value', how='inner')
+            self._omopped_data = self._omopped_data.merge(queried_care_sites, on='care_site_source_value', how='left')
             # drop columns that are not needed
             self._omopped_data.drop(columns=['care_site_source_value'], inplace=True)            
             # Filter the new data to only include unique provider_id entries
+            
             filtered_data = self._omopped_data[
                 ~self._omopped_data['provider_id'].isin(existing_providers)
             ]
+            
             # check if there are new records to insert
             if filtered_data.empty:
                 logging.info("No new data to insert for Providers; all records already exist in the target table.")

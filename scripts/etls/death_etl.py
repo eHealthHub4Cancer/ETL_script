@@ -8,14 +8,14 @@ class Death(ETLEntity):
     # pass the fields and their source
     
     def map_data(self, mapper = {}):
-        """Map the specific fields for the Person entity."""
+        """Map the specific fields for the Death entity."""
         try:
             self._remove_non_death_records()
             self._handle_dates()
             self._set_source_values()
-            logging.info("person data mapped successfully.")
+            logging.info("Death data mapped successfully.")
         except Exception as e:
-            logging.error(f"Error during person data mapping: {e}")
+            logging.error(f"Error during Death data mapping: {e}")
 
     def _remove_non_death_records(self):
         """Remove records that have empty death dates."""

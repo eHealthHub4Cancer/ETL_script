@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)  # Use DEBUG level for detailed logging
 
 class LoadDrug(LoadOmoppedData):
     def load_data(self):
-        """Load encounter data into the OMOP visit occurrence table."""
+        """Load drug exposure data into OMOP drug exposure table."""
         try:
             query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader())
             # retrieve person records
@@ -31,23 +31,31 @@ class LoadDrug(LoadOmoppedData):
             ]
             # check if there are new records to insert
             if filtered_data.empty:
-                logging.info("No new data to insert for procedure occurrence; all records already exist in the target table.")
+                logging.info("No new data to insert for drug exposure; all records already exist in the target table.")
                 return
             
+            filtered_data = filtered_data.copy()
+            filtered_data.loc[:, 'drug_exposure_start_date'] = filtered_data['drug_exposure_start_date'].fillna(filtered_data['drug_exposure_end_date'])
+            filtered_data.loc[:, 'drug_exposure_start_date'].fillna(pd.to_datetime('2000-01-01'))
+            filtered_data.loc[:, 'drug_exposure_end_date'] = filtered_data['drug_exposure_end_date'].fillna(filtered_data['drug_exposure_start_date'])
             # retrieve visits
             queried_visits = query_utils.retrieve_visits()
             # merge
-            filtered_data = filtered_data.merge(queried_visits, on='visit_source_value', how='inner')
-            # existing visit details
-            # # retrieve concepts
-            queried_concepts = query_utils.retrieve_concepts()
-            # get only snomed vocabularies
-            queried_concepts = queried_concepts[queried_concepts['vocabulary_id'].isin(['RxNorm', 'CVX'])]
-            # merge based on concept code.
-            queried_concepts = queried_concepts.set_index('concept_code').to_dict()['concept_id']
-            # map the concept ids
-            filtered_data['drug_concept_id'] = filtered_data['drug_source_concept_id'].astype(str).map(queried_concepts)
-            # drop columns that are not needed 
+            filtered_data = filtered_data.merge(queried_visits, on='visit_source_value', how='left')
+            filtered_data['drug_source_concept_id'] = filtered_data['drug_source_concept_id'].astype(str)
+            # retrieve concept id
+            unique_concepts = filtered_data['drug_source_concept_id'].unique()
+            unique_concepts = unique_concepts.tolist()
+            concept_id_map = query_utils.retrieve_concept_id(unique_concepts, vocabulary=('RxNorm', 'CVX', 'RxNorm Extension'))
+            
+            filtered_data['drug_concept_id'] = filtered_data['drug_source_concept_id'].map(concept_id_map).astype(int)
+            # retrieve source concepts
+            source_concept_id_map = query_utils.retrieve_source_concept_id(unique_concepts, vocabulary=(
+                'RxNorm', 'CVX', 'RxNorm Extension','HCPCS','CPT4', 'HemOnc', 'NAACCR'))
+            filtered_data['drug_source_concept_id'] = filtered_data['drug_source_concept_id'].map(source_concept_id_map).astype(int)
+            # strip the length
+            filtered_data['drug_source_value'] = filtered_data['drug_source_value'].apply(query_utils.strip_length)
+            # drop columns that are not needed
             filtered_data.drop(columns=['person_source_value', 'visit_source_value'], inplace=True)            
             # only keep the columns that are not duplicates
             filtered_data = filtered_data.drop_duplicates(subset=['drug_exposure_id'], keep='first')

@@ -30,6 +30,9 @@ class LoadLocation(LoadOmoppedData):
             # push the filtered data to the database
             # only keep the columns that are not duplicates
             filtered_data = filtered_data.drop_duplicates(subset=['location_id'], keep='first')
+            # strip the length
+            filtered_data['location_source_value'] = filtered_data['location_source_value'].apply(query_utils.strip_length)
+            # push the filtered data to the database
             asyncio.run(self.push_to_db(
                 batch_size=250000,
                 data=filtered_data,
@@ -37,7 +40,6 @@ class LoadLocation(LoadOmoppedData):
             ))
             
             logging.info(f"Loaded data into table '{self._schema}.{self._table}'.")
-            logging.info(f"total number of records: {len(filtered_data)}")
 
         except Exception as e:
             logging.error(f"Failed to load data into table: {e}")

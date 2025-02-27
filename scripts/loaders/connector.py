@@ -46,3 +46,5 @@ class ConnectToDatabase:
         )
         self._conn = self._conn_details.connect_to_db()
         self._db_loader = CSVLoader(self._conn, self._conn_details)
+
+        

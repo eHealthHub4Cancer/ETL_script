@@ -8,13 +8,13 @@ class Location(ETLEntity):
     # pass the fields and their source
     
     def map_data(self, mapper = {}):
-        """Map the specific fields for the Person entity."""
+        """Map the specific fields for the Location entity."""
         try:
             self._generate_ids()
             self._set_source_values()
-            logging.info("person data mapped successfully.")
+            logging.info("Location data mapped successfully.")
         except Exception as e:
-            logging.error(f"Error during person data mapping: {e}")
+            logging.error(f"Error during Location data mapping: {e}")
 
     def _generate_ids(self):
         # create another field here, call it lat_lon

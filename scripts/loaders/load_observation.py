@@ -37,16 +37,25 @@ class LoadObservation(LoadOmoppedData):
             # retrieve visits
             queried_visits = query_utils.retrieve_visits()
             # merge
-            filtered_data = filtered_data.merge(queried_visits, on='visit_source_value', how='inner')
-            # retrieve concepts
-            queried_concepts = query_utils.retrieve_concepts()
-            # get only snomed vocabularies
-            queried_concepts = queried_concepts[queried_concepts['vocabulary_id'].isin(['LOINC', 'SNOMED'])]
-            # concept dict
-            concept_dict = queried_concepts.set_index('concept_code')['concept_id'].to_dict()
-            # merge based on concept code.
-            filtered_data['observation_concept_id'] = filtered_data['observation_concept_id'].map(concept_dict)
-            filtered_data['observation_type_concept_id'] = filtered_data['observation_type_concept_id'].map(concept_dict)
+            filtered_data = filtered_data.merge(queried_visits, on='visit_source_value', how='left')
+            # convert the observation source concept id to string
+            filtered_data['observation_concept_id'] = filtered_data['observation_concept_id'].astype(str)
+            # get the unique codes
+            unique_code = filtered_data['observation_concept_id'].unique().tolist()
+            # get the concept id
+            unique_concept_id = query_utils.retrieve_concept_id(code=unique_code, vocabulary=('LOINC', 'SNOMED','MeSH'))
+            # merge the concept id
+            filtered_data['observation_concept_id'] = filtered_data['observation_concept_id'].map(unique_concept_id).astype(int)
+            # observation type concept id
+            filtered_data['observation_type_concept_id'] = filtered_data['observation_type_concept_id'].astype(str)
+            # get the unique types
+            unique_types = filtered_data['observation_type_concept_id'].unique().tolist()
+            # get the concept id
+            unique_type_id = query_utils.retrieve_concept_id(code=unique_types, vocabulary=('SNOMED', 'LOINC', 'MeSH'))
+            # merge the concept id
+            filtered_data['observation_type_concept_id'] = filtered_data['observation_type_concept_id'].map(unique_type_id).astype(int)
+            # strip the length
+            filtered_data['observation_source_value'] = filtered_data['observation_source_value'].apply(query_utils.strip_length)
             # drop columns that are not needed 
             filtered_data.drop(columns=['person_source_value', 'visit_source_value'], inplace=True)            
             # only keep the columns that are not duplicates

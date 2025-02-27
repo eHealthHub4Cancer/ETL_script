@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG)  # Use DEBUG level for detailed logging
 
 class LoadProcedure(LoadOmoppedData):
     def load_data(self):
-        """Load encounter data into the OMOP visit occurrence table."""
+        """Load procedure occurrence data."""
         try:
             query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader())
             # retrieve person records
@@ -33,22 +33,25 @@ class LoadProcedure(LoadOmoppedData):
             if filtered_data.empty:
                 logging.info("No new data to insert for procedure occurrence; all records already exist in the target table.")
                 return
+            
             queried_visits = query_utils.retrieve_visits()
             # merge
-            filtered_data = filtered_data.merge(queried_visits, on='visit_source_value', how='inner')
-            # retrieve concepts
-            queried_concepts = query_utils.retrieve_concepts()
-            # get only snomed vocabularies
-            queried_concepts = queried_concepts[queried_concepts['vocabulary_id'] == 'SNOMED']
-            # merge based on concept code.
+            filtered_data = filtered_data.merge(queried_visits, on='visit_source_value', how='left')
+            # convert the procedure source concept id to string
             filtered_data['procedure_source_concept_id'] = filtered_data['procedure_source_concept_id'].astype(str)
-            filtered_data = filtered_data.merge(queried_concepts, left_on='procedure_source_concept_id', right_on='concept_code', how='inner')            
-            # set procedure concept id.
-            filtered_data['procedure_concept_id'] = filtered_data['concept_id']
-            filtered_data['procedure_source_concept_id'] = filtered_data['procedure_concept_id']
-
+            # get the concept id
+            unique_code = filtered_data['procedure_source_concept_id'].unique().tolist()
+            unique_concept_id = query_utils.retrieve_concept_id(code=unique_code, vocabulary=('SNOMED', 'CPT4', 'HCPCS'))
+            # merge the concept id
+            filtered_data['procedure_concept_id'] = filtered_data['procedure_source_concept_id'].map(unique_concept_id).astype(int)
+            # get the source concept id
+            unique_source_concept_id = query_utils.retrieve_source_concept_id(code=unique_code, vocabulary=('SNOMED','HemOnc','NAACCR'))
+            # merge the source concept id
+            filtered_data['procedure_source_concept_id'] = filtered_data['procedure_source_concept_id'].map(unique_source_concept_id).astype(int)
+            # strip the length
+            filtered_data['procedure_source_value'] = filtered_data['procedure_source_value'].apply(query_utils.strip_length)
             # drop columns that are not needed 
-            filtered_data.drop(columns=['person_source_value', 'visit_source_value', 'concept_code', 'vocabulary_id', 'concept_id'], inplace=True)            
+            filtered_data.drop(columns=['person_source_value', 'visit_source_value'], inplace=True)            
             # only keep the columns that are not duplicates
             filtered_data = filtered_data.drop_duplicates(subset=['procedure_occurrence_id'], keep='first')
             # push the filtered data to the database

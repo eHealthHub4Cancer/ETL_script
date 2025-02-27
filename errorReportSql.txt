@@ -2,15 +2,15 @@ DBMS:
 postgresql
 
 Error:
-org.postgresql.util.PSQLException: ERROR: column "visit_occurrence.visit_occurrence_id" must appear in the GROUP BY clause or be used in an aggregate function
-  Position: 19
+org.postgresql.util.PSQLException: ERROR: syntax error at or near ")"
+  Position: 101
 
 SQL:
 
-        SELECT person_id, visit_occurrence_id, MIN(visit_start_date), 
-        MAX(visit_end_date) 
-        FROM aml_practice.visit_occurrence
-        GROUP BY person_id
+        SELECT concept_id, concept_code 
+        FROM breast_cancer.concept 
+        WHERE concept_code IN () 
+        AND standard_concept = 'S'
         
 
 R version:

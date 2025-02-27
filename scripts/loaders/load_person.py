@@ -21,7 +21,6 @@ class LoadPerson(LoadOmoppedData):
             queried_data_pandas = query_utils.retrieve_persons()
             # Initialize an empty set and update with existing values
             existing_values = set(queried_data_pandas['person_source_value'])
-
             # Filter the new data to only include unique person_source_value entries
             filtered_data = self._omopped_data[
                 ~self._omopped_data['person_source_value'].isin(existing_values)
@@ -34,7 +33,8 @@ class LoadPerson(LoadOmoppedData):
             # get location ids
             locations = query_utils.retrieve_locations()
             # merge the data
-            filtered_data = filtered_data.merge(locations, left_on='location_source_value', right_on='location_source_value', how='inner')
+            filtered_data = filtered_data.merge(locations, left_on='location_source_value', right_on='location_source_value', how='left')
+            
             # remove the location_source_value column
             filtered_data.drop(columns=['location_source_value'], inplace=True)
             # drop duplicates.
