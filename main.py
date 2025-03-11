@@ -36,6 +36,23 @@ def generate_csv():
     csv_gen = CSVGen(db_conn.db_connector._conn, table_names, csv_results, schema)
     csv_gen.generate_csv()
 
+# this part create the ddl scripts.
+def generate_ddl():
+    # get the cdm version
+    cdm_version = os.getenv("CDM_VERSION")
+    loader = BaseETLPipeline()
+    loader.db_connector._conn_details.execute_ddl(cdm_version)
+
+# load the vocabulary
+def load_vocab():
+    vocab = os.getenv("CSV_PATH")
+    loader = BaseETLPipeline()
+    loader.db_connector._db_loader.load_all_csvs(vocab)
+    
+
+
 if __name__ == "__main__":
     main()
     # generate_csv()
+    # generate_ddl()
+    # load_vocab()
