@@ -8,6 +8,7 @@ from rpy2.robjects.packages import importr
 from rpy2.robjects import pandas2ri
 import pyarrow.feather as feather
 from collections import defaultdict
+import uuid
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)  # Use DEBUG level for detailed logging
@@ -402,3 +403,77 @@ class QueryUtils:
     def strip_length(self, data, length = 50):
         """strip the length of the data."""
         return data[:length]
+
+    # retrieve the drug exposure data from the database.
+    def retrieve_drug_exposure(self):
+        """Retrieve existing drug exposure records."""
+        query = f"SELECT * FROM {self._schema}.drug_exposure"
+        queried_data = self._db_connector.querySql(
+            connection=self._conn,
+            sql=query
+        )
+        queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
+        queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
+        
+        if not queried_data_pandas.empty:
+            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'drug_exposure')
+        
+        return queried_data_pandas
+    
+    # retrieve the condition occurrence data from the database.
+    def retrieve_condition_occurrence(self):
+        """Retrieve existing condition occurrence records."""
+        query = f"SELECT * FROM {self._schema}.condition_occurrence"
+        queried_data = self._db_connector.querySql(
+            connection=self._conn,
+            sql=query
+        )
+        queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
+        queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
+        
+        if not queried_data_pandas.empty:
+            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'condition_occurrence')
+        
+        return queried_data_pandas
+    
+    def retrieve_drug_era(self):
+        """Retrieve existing drug era records."""
+        query = f"SELECT drug_era_id FROM {self._schema}.drug_era"
+        queried_data = self._db_connector.querySql(
+            connection=self._conn,
+            sql=query
+        )
+        queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
+        queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
+        
+        if not queried_data_pandas.empty:
+            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'drug_era')
+        
+        return queried_data_pandas
+    
+    def unique_id_generator(self, source_id, source_type):
+        """Generate a unique identifier.
+        Args:
+            source_id: str - This defines the source id from the table.
+            source_type: str - This defines the source type mainly the table name.
+        """
+
+        # Using a deterministic UUID version 5 based on a namespace and the source_id
+        namespace = uuid.NAMESPACE_DNS
+        namespace = uuid.uuid5(namespace, source_type)
+        return uuid.uuid5(namespace, source_id).int % (10**9)
+    
+    def retrieve_condition_era(self):
+        """Retrieve existing condition era records."""
+        query = f"SELECT condition_era_id FROM {self._schema}.condition_era"
+        queried_data = self._db_connector.querySql(
+            connection=self._conn,
+            sql=query
+        )
+        queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
+        queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
+        
+        if not queried_data_pandas.empty:
+            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'condition_era')
+        
+        return queried_data_pandas
