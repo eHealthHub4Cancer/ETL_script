@@ -2,15 +2,11 @@ DBMS:
 postgresql
 
 Error:
-org.postgresql.util.PSQLException: ERROR: relation "cohort" already exists
+org.postgresql.util.PSQLException: ERROR: column "observation_type_concept_id" does not exist
+  Position: 49
 
 SQL:
---HINT DISTRIBUTE ON RANDOM
-CREATE TABLE aml_practice.cohort (
-			cohort_definition_id integer NOT NULL,
-			subject_id integer NOT NULL,
-			cohort_start_date date NOT NULL,
-			cohort_end_date date NOT NULL )
+SELECT * FROM aml_cancer.visit_occurrence WHERE OBSERVATION_TYPE_CONCEPT_ID=0
 
 R version:
 R version 4.4.2 (2024-10-31 ucrt)
