@@ -477,3 +477,15 @@ class QueryUtils:
             queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'condition_era')
         
         return queried_data_pandas
+    
+    def retrieve_null_concepts(self, table_name, field_name):
+        """Retrieve existing concepts records."""
+        query = f"SELECT * FROM {self._schema}.{table_name} WHERE {field_name}=0"
+        queried_data = self._db_connector.querySql(
+            connection=self._conn,
+            sql=query
+        )
+        queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
+        queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
+                
+        return queried_data_pandas

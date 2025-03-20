@@ -2,6 +2,7 @@ from mappers.synthea_mapper import SyntheaETLPipeline
 from mappers.custom_mapper import CustomETLPipeline
 from mappers.main_mapper import BaseETLPipeline
 from scripts.csv_gen.main import CSVGen
+from scripts.usagi.main import MapCodeGen
 import ast
 
 # import dotenv
@@ -48,11 +49,26 @@ def load_vocab():
     vocab = os.getenv("CSV_PATH")
     loader = BaseETLPipeline()
     loader.db_connector._db_loader.load_all_csvs(vocab)
-    
 
+# generate the mapping code.
+def generate_mapping():
+    table_names = os.getenv("NULL_CONCEPT_TABLES")
+    if table_names:
+        table_names = ast.literal_eval(table_names)
+    else:
+        table_names = []
+
+    file_name = os.getenv("FILE_NAME")
+    
+    loader = BaseETLPipeline()
+    schema = os.getenv("DB_SCHEMA")
+    usagi_result = os.getenv("USAGI_RESULT") 
+    generator = MapCodeGen(loader.db_connector._conn, table_names, usagi_result, schema)
+    generator.run(file_name)    
 
 if __name__ == "__main__":
-    main()
+    # main()
+    generate_mapping()
     # generate_csv()
     # generate_ddl()
     # load_vocab()
