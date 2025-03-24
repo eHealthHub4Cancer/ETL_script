@@ -489,3 +489,14 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
                 
         return queried_data_pandas
+    
+    def retrieve_all_stcm(self, table_name):
+        """Retrieve all standard concepts mappings."""
+        query = f"SELECT * FROM {self._schema}.{table_name}"
+        queried_data = self._db_connector.querySql(
+            connection=self._conn,
+            sql=query
+        )
+        queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
+                
+        return queried_data_pandas

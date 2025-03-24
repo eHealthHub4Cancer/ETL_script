@@ -46,6 +46,8 @@ class LoadOmoppedData(ABC):
                 data=data,
                 table_name=table_name
             )
+            
         except Exception as e:
             logging.error(f"Failed to load data into table: {e}")
+        
         return

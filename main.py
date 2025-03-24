@@ -63,8 +63,22 @@ def generate_mapping():
     loader = BaseETLPipeline()
     schema = os.getenv("DB_SCHEMA")
     usagi_result = os.getenv("USAGI_RESULT") 
-    generator = MapCodeGen(loader.db_connector._conn, table_names, usagi_result, schema)
-    generator.run(file_name)    
+    generator = MapCodeGen(
+        db_conn=loader.db_connector._conn, 
+        table_names=table_names, 
+        save_dir=usagi_result, 
+        schema=schema, 
+        file_name=file_name)
+    # generator.run()    
+    get_data = generator.save_usagi(file_name="usagi_result.csv")
+    generator.push_usagi(
+        connector=loader.db_connector, 
+        data=get_data,
+        table_name="source_to_concept_map",
+        batch_size=250000
+    )
+
+
 
 if __name__ == "__main__":
     # main()
