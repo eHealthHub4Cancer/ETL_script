@@ -16,7 +16,7 @@ class LoadProvider(LoadOmoppedData):
     def load_data(self):
         """Load provider data."""
         try:
-            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader())
+            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader(), self._vocab_schema)
             # retrieve past providers.
             queried_providers = query_utils.retrieve_providers()
             # retrieve existing care site records.

@@ -17,7 +17,7 @@ class LoadVisitDetails(LoadOmoppedData):
     def load_data(self):
         """Load encounter data into the OMOP visit details table."""
         try:
-            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader())
+            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader(), self._vocab_schema)
             # retrieve person records
             queried_person = query_utils.retrieve_persons()
             # join both tables using inner join.

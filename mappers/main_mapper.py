@@ -21,6 +21,7 @@ class BaseETLPipeline:
             "user": os.getenv("DB_USER"),
             "driver_path": os.getenv("DRIVER_PATH"),
             "db_schema": os.getenv("DB_SCHEMA"),
+            "vocab_schema": os.getenv("VOCAB_SCHEMA") or os.getenv("DB_SCHEMA"),
         }
         self.file_path = os.getenv("FILE_PATH")
         self.db_connector = ConnectToDatabase(**self.db_config)

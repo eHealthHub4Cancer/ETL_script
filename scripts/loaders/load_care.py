@@ -15,7 +15,7 @@ class LoadCareSite(LoadOmoppedData):
         """Load Care site data into the OMOP ObservationPeriod table."""
         try:
             # retrieve existing person_source_value records
-            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader())
+            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader(), self._vocab_schema)
             # retrieve location records
             queried_locations = query_utils.retrieve_locations()
             # merge the data

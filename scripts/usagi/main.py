@@ -15,7 +15,16 @@ pd.set_option('future.no_silent_downcasting', True)
 logging.basicConfig(level=logging.DEBUG)  # Use DEBUG level for detailed logging
 
 class MapCodeGen:
-    def __init__(self, db_conn, table_names: list, save_dir: str, schema: str, file_name: str = "mapping.csv", chunk_size: int = 100000):
+    def __init__(
+        self,
+        db_conn,
+        table_names: list,
+        save_dir: str,
+        schema: str,
+        vocab_schema: str,
+        file_name: str = "mapping.csv",
+        chunk_size: int = 100000
+    ):
         """
         Initialize the MapCodeGen class.
 
@@ -31,11 +40,12 @@ class MapCodeGen:
         self._schema = schema
         self._chunk_size = chunk_size
         self._file_name = file_name
+        self._vocab_schema = vocab_schema or schema
         self._df = pd.DataFrame(columns=["concept_id", "source_value", "source_id", "table_name", "field_type"])
 
         # Ensure the save directory exists
         os.makedirs(self._save_dir, exist_ok=True)
-        self._query_utils = QueryUtils(self._conn, self._schema, "", "")
+        self._query_utils = QueryUtils(self._conn, self._schema, "", "", self._vocab_schema)
 
     async def push_to_db(self, batch_size, data, table_name):
         """Push data to the database."""

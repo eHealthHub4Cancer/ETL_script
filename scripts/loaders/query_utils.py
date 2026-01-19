@@ -14,7 +14,7 @@ import uuid
 logging.basicConfig(level=logging.DEBUG)  # Use DEBUG level for detailed logging
 
 class QueryUtils:
-    def __init__(self, conn, schema, table, csv_loader):
+    def __init__(self, conn, schema, table, csv_loader, vocab_schema: Optional[str] = None):
         """
         Initialize the QueryUtils with the given parameters.
 
@@ -23,6 +23,7 @@ class QueryUtils:
         """
         self._conn = conn
         self._schema = schema
+        self._vocab_schema = vocab_schema or schema
         self._table = table
         self._db_connector = importr('DatabaseConnector')
         self._arrow = importr('arrow')
@@ -208,7 +209,7 @@ class QueryUtils:
 
     def retrieve_concepts(self):
         """Retrieve existing concept records."""
-        query = f"SELECT concept_id, concept_code, vocabulary_id FROM {self._schema}.concept"
+        query = f"SELECT concept_id, concept_code, vocabulary_id FROM {self._vocab_schema}.concept"
         queried_data = self._db_connector.querySql(
             connection=self._conn,
             sql=query
@@ -342,7 +343,7 @@ class QueryUtils:
         # step 1: Query standard concepts directly
         get_standard_concept_id = f"""
         SELECT concept_id, concept_code 
-        FROM {self._schema}.concept 
+        FROM {self._vocab_schema}.concept 
         WHERE concept_code IN ({code_list}) 
         AND standard_concept = 'S'
         """
@@ -360,9 +361,9 @@ class QueryUtils:
         code_list = self.group_list(missing_codes)
         get_non_standard_concept_id = f"""
         SELECT c2.concept_id, c1.concept_code 
-        FROM {self._schema}.concept c1 
-        JOIN {self._schema}.concept_relationship cr ON c1.concept_id = cr.concept_id_1 
-        JOIN {self._schema}.concept c2 ON cr.concept_id_2 = c2.concept_id 
+        FROM {self._vocab_schema}.concept c1 
+        JOIN {self._vocab_schema}.concept_relationship cr ON c1.concept_id = cr.concept_id_1 
+        JOIN {self._vocab_schema}.concept c2 ON cr.concept_id_2 = c2.concept_id 
         WHERE c1.concept_code IN ({code_list}) 
         AND c1.vocabulary_id IN ({vocab_list}) 
         AND cr.relationship_id = 'Maps to' 
@@ -388,7 +389,7 @@ class QueryUtils:
 
         get_concept_id = f"""
         SELECT concept_id, concept_code
-        FROM {self._schema}.concept 
+        FROM {self._vocab_schema}.concept 
         WHERE concept_code IN ({code_list}) 
         AND vocabulary_id IN ({vocab_list}) 
         """

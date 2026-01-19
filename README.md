@@ -46,6 +46,7 @@ DB_NAME=ohdsi_tutorial
 DB_USER=postgres
 DB_PASSWORD=postgres
 DB_SCHEMA=public
+VOCAB_SCHEMA=public
 DRIVER_PATH=/path/to/jdbc/driver
 FILE_PATH=/path/to/synthea/csvs
 MAPPER_CLASS=SyntheaETLPipeline

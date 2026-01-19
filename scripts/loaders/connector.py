@@ -10,7 +10,18 @@ from typing import Optional
 logging.basicConfig(level=logging.DEBUG)  # Use DEBUG level for detailed logging
 
 class ConnectToDatabase:
-    def __init__(self, dbms: str, server: str, user: str, password: str, database: str, driver_path: str, db_schema: str, port: int = 5432):
+    def __init__(
+        self,
+        dbms: str,
+        server: str,
+        user: str,
+        password: str,
+        database: str,
+        driver_path: str,
+        db_schema: str,
+        vocab_schema: Optional[str] = None,
+        port: int = 5432
+    ):
         """
         Initialize the DatabaseHandler with the given parameters.
 
@@ -33,6 +44,7 @@ class ConnectToDatabase:
         self._conn_details: Optional[object] = None
         self._port = port
         self._schema = db_schema
+        self._vocab_schema = vocab_schema or db_schema
         self._db_connector = importr('DatabaseConnector')
         self.create_connection()
 

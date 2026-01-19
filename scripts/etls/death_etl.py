@@ -24,14 +24,35 @@ class Death(ETLEntity):
     def _handle_dates(self):
         """Ensure start and end dates are in datetime format."""
         self._source_data['death_datetime'] = pd.to_datetime(self._source_data['deathdate'], errors='coerce')
+        self._source_data = self._source_data.dropna(subset=['death_datetime'])
         # convert to date
         self._source_data['death_date'] = self._source_data['death_datetime'].dt.date
         
     def _set_source_values(self):
         """Set source values for OMOP mapping."""
         self._source_data['death_type_concept_id'] = 32817 # EHR record
-        self._source_data['cause_source_value'] = 'C92.0' # ICD-10 code for Acute myeloblastic leukemia
-        self._source_data['cause_concept_id'] = 140352 # Acute myeloblastic leukemia
-        self._source_data['cause_source_concept_id'] = 45600565 # ICD-10
+        self._set_cause_of_death()
         self._source_data['person_source_value'] = self._source_data['id'].apply(self.remove_non_alphanumeric)
         self._source_data['person_source_value'] = self._source_data['person_source_value'].apply(self.encrypt_value)
+
+    def _set_cause_of_death(self):
+        """Set cause of death fields without hardcoding a specific condition."""
+        cause_columns = [
+            'cause_of_death',
+            'death_cause',
+            'deathcause',
+            'cause',
+            'cause_source_value'
+        ]
+
+        cause_column = next((col for col in cause_columns if col in self._source_data.columns), None)
+
+        if cause_column:
+            self._source_data['cause_source_value'] = self._source_data[cause_column]
+        else:
+            self._source_data['cause_source_value'] = None
+
+        if 'cause_concept_id' not in self._source_data.columns:
+            self._source_data['cause_concept_id'] = 0
+        if 'cause_source_concept_id' not in self._source_data.columns:
+            self._source_data['cause_source_concept_id'] = 0

@@ -15,7 +15,7 @@ class LoadLocation(LoadOmoppedData):
         """Load location data into the OMOP Location table."""
         try:
             # retrieve existing location records.
-            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader())
+            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader(), self._vocab_schema)
             # generate location values
             retrieved_locations = query_utils.retrieve_locations()
             # get only unique locations ids

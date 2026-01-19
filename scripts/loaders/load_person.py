@@ -17,7 +17,7 @@ class LoadPerson(LoadOmoppedData):
         """Load Person data into the OMOP Person table."""
         try:
             # Retrieve existing person_source_value records
-            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader())
+            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader(), self._vocab_schema)
             queried_data_pandas = query_utils.retrieve_persons()
             # Initialize an empty set and update with existing values
             existing_values = set(queried_data_pandas['person_source_value'])

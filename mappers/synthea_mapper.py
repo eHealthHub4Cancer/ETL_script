@@ -49,7 +49,7 @@ class SyntheaETLPipeline(BaseETLPipeline):
         }
         self.etl_mapping = {
             # "location_": (Location, LoadLocation, ['location_id', 'city', 'county', 'country_concept_id', 'country_source_value', 'location_source_value']),
-            # "person_": (Person, LoadPerson, ['person_id', 'gender_concept_id', 'year_of_birth', 'month_of_birth', 'day_of_birth', 'race_concept_id', 'ethnicity_concept_id', 'person_source_value', 'gender_source_value', 'gender_source_concept_id', 'race_source_value', 'ethnicity_source_value', 'location_source_value']),
+            # "person_": (Person, LoadPerson, ['person_id', 'gender_concept_id', 'year_of_birth', 'month_of_birth', 'day_of_birth', 'birth_datetime', 'race_concept_id', 'ethnicity_concept_id', 'person_source_value', 'gender_source_value', 'gender_source_concept_id', 'race_source_value', 'race_source_concept_id', 'ethnicity_source_value', 'ethnicity_source_concept_id', 'location_source_value']),
             # "death_": (Death, LoadDeath, ['death_date', 'death_type_concept_id', 'death_datetime', 'cause_concept_id', 'cause_source_value', 'cause_source_concept_id', 'person_source_value']),
             # "observation_period_": (ObservationPeriod, LoadObservationPeriod, ['person_source_value', 'observation_period_id', 'observation_period_start_date', 'observation_period_end_date', 'period_type_concept_id']),
             # "care_site_": (CareSite, LoadCareSite, ['care_site_id', 'care_site_name', 'place_of_service_concept_id', 'care_site_source_value', 'location_source_value']),
