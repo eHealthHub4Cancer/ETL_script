@@ -15,7 +15,7 @@ class LoadObservationPeriod(LoadOmoppedData):
         """Load Observation data into the OMOP ObservationPeriod table."""
         try:
             # retrieve existing person_source_value records
-            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader())
+            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader(), self._vocab_schema)
             # generate person values
             retrieved_persons = query_utils.retrieve_persons()
             # merge the data

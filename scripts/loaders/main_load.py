@@ -20,6 +20,7 @@ class LoadOmoppedData(ABC):
         self._conn = connector._conn
         self._conn_details = connector._conn_details
         self._schema = connector._schema
+        self._vocab_schema = connector._vocab_schema
         self._omopped_data = omop_data
         self._table = omop_table
         self._db_connector = importr('DatabaseConnector')

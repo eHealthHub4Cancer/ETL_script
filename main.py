@@ -1,6 +1,7 @@
 from mappers.synthea_mapper import SyntheaETLPipeline
 from mappers.custom_mapper import CustomETLPipeline
 from mappers.main_mapper import BaseETLPipeline
+from scripts.loaders.connector import ConnectToDatabase
 from scripts.csv_gen.main import CSVGen
 from scripts.usagi.main import MapCodeGen
 import ast
@@ -47,8 +48,15 @@ def generate_ddl():
 # load the vocabulary
 def load_vocab():
     vocab = os.getenv("CSV_PATH")
+    vocab_schema = os.getenv("VOCAB_SCHEMA") or os.getenv("DB_SCHEMA")
     loader = BaseETLPipeline()
-    loader.db_connector._db_loader.load_all_csvs(vocab)
+    if vocab_schema and vocab_schema != loader.db_connector._schema:
+        db_config = loader.db_config.copy()
+        db_config["db_schema"] = vocab_schema
+        vocab_loader = ConnectToDatabase(**db_config)
+        vocab_loader._db_loader.load_all_csvs(vocab)
+    else:
+        loader.db_connector._db_loader.load_all_csvs(vocab)
 
 # generate the mapping code.
 def generate_mapping():
@@ -62,12 +70,14 @@ def generate_mapping():
     
     loader = BaseETLPipeline()
     schema = os.getenv("DB_SCHEMA")
+    vocab_schema = os.getenv("VOCAB_SCHEMA") or schema
     usagi_result = os.getenv("USAGI_RESULT") 
     generator = MapCodeGen(
         db_conn=loader.db_connector._conn, 
         table_names=table_names, 
         save_dir=usagi_result, 
-        schema=schema, 
+        schema=schema,
+        vocab_schema=vocab_schema,
         file_name=file_name)
     # generator.run()    
     get_data = generator.save_usagi(file_name="usagi_result.csv")

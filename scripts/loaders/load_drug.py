@@ -24,7 +24,7 @@ class LoadDrug(LoadOmoppedData):
     def load_drug_era_data(self, window_size: int = 30):
         """Load drug era data into OMOP drug era table."""
         try:
-            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader())
+            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader(), self._vocab_schema)
             # retrieve drug exposure records
             queried_drug_exposure = query_utils.retrieve_drug_exposure()
 
@@ -105,7 +105,7 @@ class LoadDrug(LoadOmoppedData):
     def load_data(self):
         """Load drug exposure data into OMOP drug exposure table."""
         try:
-            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader())
+            query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader(), self._vocab_schema)
             # retrieve person records
             queried_person = query_utils.retrieve_persons()
             # join both tables using inner join.
