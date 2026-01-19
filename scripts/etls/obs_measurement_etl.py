@@ -41,6 +41,7 @@ class ObserMeasurement(ETLEntity):
         self._source_data['person_source_value'] = self._source_data['patient'].apply(self.remove_non_alphanumeric)
         self._source_data['person_source_value'] = self._source_data['person_source_value'].apply(self.encrypt_value)
         self._source_data['measurement_concept_id'] = self._source_data['code'].map(lambda x: self.QUALITY_MAP.get(x, x))
+        self._source_data['measurement_source_concept_id'] = self._source_data['code']
         self._source_data['value_as_number'] = self._source_data['value']
         self._source_data['value_source_value'] = self._source_data['value'].astype(str)
         self._source_data['unit_source_value'] = self._source_data['units']
