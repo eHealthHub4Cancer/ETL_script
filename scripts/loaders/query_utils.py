@@ -71,8 +71,21 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         # convert the data types to appropriate format if not empty
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'person')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'person')
 
+        return queried_data_pandas
+
+    def retrieve_person_birthdates(self):
+        """Retrieve existing person records with birth datetime."""
+        query = f"SELECT person_source_value, person_id, birth_datetime FROM {self._schema}.person"
+        queried_data = self._db_connector.querySql(
+            connection=self._conn,
+            sql=query
+        )
+        queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
+        queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
+        if not queried_data_pandas.empty:
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'person')
         return queried_data_pandas
     
     def retrieve_visit_occurrences(self):
@@ -86,7 +99,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         # convert if not empty.
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'visit_occurrence')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'visit_occurrence')
         return queried_data_pandas
     
     def retrieve_obser_periods(self):
@@ -99,7 +112,7 @@ class QueryUtils:
         queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'observation_period')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'observation_period')
         return queried_data_pandas
 
     
@@ -131,7 +144,7 @@ class QueryUtils:
         queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'visit_occurrence')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'visit_occurrence')
         return queried_data_pandas
     
     def retrieve_dated_visits(self):
@@ -148,9 +161,18 @@ class QueryUtils:
         )
         queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
-        queried_data_pandas['person_id']= self._csv_loader.compare_and_convert(queried_data_pandas[['person_id']], 'visit_occurrence')
-        queried_data_pandas['visit_start_date'] = self._csv_loader.compare_and_convert(queried_data_pandas[['visit_start_date']], 'visit_occurrence')
-        queried_data_pandas['visit_end_date'] = self._csv_loader.compare_and_convert(queried_data_pandas[['visit_end_date']], 'visit_occurrence')
+        queried_data_pandas['person_id'] = self.compare_and_convert(
+            queried_data_pandas[['person_id']],
+            'visit_occurrence',
+        )
+        queried_data_pandas['visit_start_date'] = self.compare_and_convert(
+            queried_data_pandas[['visit_start_date']],
+            'visit_occurrence',
+        )
+        queried_data_pandas['visit_end_date'] = self.compare_and_convert(
+            queried_data_pandas[['visit_end_date']],
+            'visit_occurrence',
+        )
         return queried_data_pandas
     
     def retrieve_locations(self):
@@ -163,7 +185,7 @@ class QueryUtils:
         queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'location')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'location')
         
         return queried_data_pandas
 
@@ -177,7 +199,7 @@ class QueryUtils:
         queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'death')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'death')
         return queried_data_pandas
     
     def retrieve_care_sites(self):
@@ -190,7 +212,7 @@ class QueryUtils:
         queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'care_site')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'care_site')
         return queried_data_pandas
 
     def retrieve_providers(self):
@@ -204,7 +226,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'provider')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'provider')
         return queried_data_pandas
 
     def retrieve_concepts(self):
@@ -218,7 +240,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'concept')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'concept')
         
         return queried_data_pandas
     
@@ -233,7 +255,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'condition_occurrence')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'condition_occurrence')
         
         return queried_data_pandas
     
@@ -248,7 +270,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'visit_detail')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'visit_detail')
         
         return queried_data_pandas
 
@@ -263,7 +285,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'procedure_occurrence')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'procedure_occurrence')
         
         return queried_data_pandas
     
@@ -278,7 +300,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'drug_exposure')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'drug_exposure')
         
         return queried_data_pandas
     
@@ -293,7 +315,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'measurement')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'measurement')
         
         return queried_data_pandas
     
@@ -308,7 +330,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'observation')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'observation')
         
         return queried_data_pandas
     
@@ -417,7 +439,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'drug_exposure')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'drug_exposure')
         
         return queried_data_pandas
     
@@ -433,7 +455,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'condition_occurrence')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'condition_occurrence')
         
         return queried_data_pandas
     
@@ -448,7 +470,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'drug_era')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'drug_era')
         
         return queried_data_pandas
 
@@ -463,7 +485,7 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
 
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'dose_era')
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'dose_era')
 
         return queried_data_pandas
     
@@ -490,9 +512,60 @@ class QueryUtils:
         queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
         
         if not queried_data_pandas.empty:
-            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'condition_era')
-        
+            queried_data_pandas = self.compare_and_convert(queried_data_pandas, 'condition_era')
+
         return queried_data_pandas
+
+    def compare_and_convert(self, rdf: object, table: str):
+        """
+        Compare the data frame columns with the database schema and convert columns as necessary.
+        rdf: R data frame to be compared and converted.
+        table: table name to compare the schema with.
+        """
+        query = (
+            "SELECT column_name, data_type, character_maximum_length "
+            f"FROM information_schema.columns WHERE table_name = '{table}' "
+            f"and table_schema = '{self._schema}'"
+        )
+        result = self._db_connector.querySql(
+            connection=self._conn,
+            sql=query
+        )
+        result = self.convert_dataframe(result, 'r_to_py')
+        result.columns = result.columns.str.lower()
+        result_schema = dict(zip(result['column_name'], result['data_type']))
+        self._character = dict(zip(result['column_name'], result['character_maximum_length']))
+        rdf = rdf.dropna(axis=1, how='all')
+        required_columns = set(result_schema.keys())
+        dataframe_columns = set(rdf.columns)
+        similar_columns = required_columns.intersection(dataframe_columns)
+
+        return self.check_data_types(rdf, result_schema, similar_columns)
+
+    def check_data_types(self, rdf: object, result_schema, similar_columns) -> object:
+        """
+        Check the data types of the columns in the data frame and convert them as necessary.
+        """
+        similar_columns = list(similar_columns)
+        new_rdf = rdf[similar_columns].copy()
+
+        for column in similar_columns:
+            if result_schema[column] in ['integer', 'bigint', 'smallint']:
+                new_rdf[column] = pd.to_numeric(new_rdf[column], errors='coerce').astype('Int64')
+            if result_schema[column] in ['numeric']:
+                new_rdf[column] = pd.to_numeric(new_rdf[column], errors='coerce')
+            if result_schema[column] in ['character', 'character varying']:
+                new_rdf[column] = new_rdf[column].fillna('').astype(str)
+                max_length = self._character.get(column)
+                if pd.notna(max_length):
+                    new_rdf[column] = new_rdf[column].str[:int(max_length)]
+            elif result_schema[column] in ['date', 'Date']:
+                new_rdf[column] = pd.to_datetime(new_rdf[column], format='%Y%m%d', errors='coerce')
+            elif result_schema[column] == 'logical':
+                new_rdf[column] = new_rdf[column].astype(bool)
+            elif result_schema[column] == 'complex':
+                new_rdf[column] = new_rdf[column].astype(complex)
+        return new_rdf
     
     def retrieve_null_concepts(self, table_name, field_name):
         """Retrieve existing concepts records."""

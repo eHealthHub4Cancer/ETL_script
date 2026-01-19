@@ -20,6 +20,7 @@ class VisitDetail(ETLEntity):
         """Set source values for OMOP mapping."""
         self._source_data['visit_detail_source_value'] = self._source_data['description']
         self._source_data['visit_detail_concept_id'] = self._source_data['code']
+        self._source_data['visit_detail_source_concept_id'] = self._source_data['code']
         self._source_data['provider_source_value'] = self._source_data['provider']
         
         self._source_data['care_site_source_value'] = self._source_data['organization'].apply(self.remove_non_alphanumeric)

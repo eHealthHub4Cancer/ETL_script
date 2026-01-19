@@ -12,6 +12,7 @@ from Crypto.Util.Padding import pad, unpad
 import base64
 import os
 import hashlib
+from .cdm_schema import CDM_SCHEMA
 
 load_dotenv()
 env_key=os.getenv('ENCRYPT_KEY')
@@ -65,7 +66,7 @@ class ETLEntity(ABC):
     def map_data_to_fields(self):
         """Extract only the required fields for OMOP mapping."""
         try:
-            self._omop_data = self._source_data[self._fields_map]
+            self._omop_data = self._source_data.reindex(columns=self._fields_map)
             logging.info("Data mapped to specified fields successfully.")
         except KeyError as e:
             logging.error(f"Mapping failed. Missing fields: {e}")
@@ -129,3 +130,49 @@ class ETLEntity(ABC):
         self.set_fields(fields=fields)
         self.map_data()
         self.map_data_to_fields()
+        self.apply_cdm_schema()
+
+    def apply_cdm_schema(self):
+        """Apply CDM 5.4 data types and constraints to mapped data."""
+        schema = CDM_SCHEMA.get(self._target_table)
+        if not schema:
+            logging.warning(f"No CDM schema defined for table '{self._target_table}'. Skipping type coercion.")
+            return
+
+        for column, rules in schema.items():
+            if column not in self._omop_data.columns:
+                continue
+            data_type = rules.get("type")
+            default = rules.get("default")
+            max_length = rules.get("max_length")
+            self._omop_data[column] = self._coerce_column(
+                self._omop_data[column],
+                data_type=data_type,
+                default=default,
+                max_length=max_length,
+            )
+
+    def _coerce_column(self, series, data_type: str, default=None, max_length: int | None = None):
+        if data_type == "int":
+            coerced = pd.to_numeric(series, errors="coerce")
+            if default is not None:
+                coerced = coerced.fillna(default)
+            return coerced.astype("Int64")
+        if data_type == "float":
+            coerced = pd.to_numeric(series, errors="coerce")
+            if default is not None:
+                coerced = coerced.fillna(default)
+            return coerced.astype(float)
+        if data_type == "date":
+            return pd.to_datetime(series, errors="coerce").dt.date
+        if data_type == "datetime":
+            return pd.to_datetime(series, errors="coerce")
+        if data_type == "str":
+            coerced = series.astype("string")
+            if max_length:
+                coerced = coerced.str.slice(0, max_length)
+            if default is not None:
+                coerced = coerced.fillna(default)
+            return coerced
+        logging.warning(f"Unsupported data type '{data_type}' for column '{series.name}'.")
+        return series

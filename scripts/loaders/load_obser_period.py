@@ -17,10 +17,24 @@ class LoadObservationPeriod(LoadOmoppedData):
             # retrieve existing person_source_value records
             query_utils = QueryUtils(self._conn, self._schema, self._table, self.get_csv_loader(), self._vocab_schema)
             # generate person values
-            retrieved_persons = query_utils.retrieve_persons()
+            retrieved_persons = query_utils.retrieve_person_birthdates()
             # merge the data
             self._omopped_data = self._omopped_data.merge(retrieved_persons, on='person_source_value', how='inner')
-            self._omopped_data.drop(columns=['person_source_value'], inplace=True)
+            if 'birth_datetime' in self._omopped_data.columns:
+                birth_date = pd.to_datetime(self._omopped_data['birth_datetime'], errors='coerce').dt.date
+                self._omopped_data['observation_period_start_date'] = self._omopped_data[
+                    'observation_period_start_date'
+                ].where(
+                    birth_date.isna() | (self._omopped_data['observation_period_start_date'] >= birth_date),
+                    birth_date,
+                )
+                self._omopped_data['observation_period_end_date'] = self._omopped_data[
+                    'observation_period_end_date'
+                ].where(
+                    self._omopped_data['observation_period_end_date'] >= self._omopped_data['observation_period_start_date'],
+                    self._omopped_data['observation_period_start_date'],
+                )
+            self._omopped_data.drop(columns=['person_source_value', 'birth_datetime'], inplace=True, errors='ignore')
             # Retrieve existing observation period records
             queried_data_pandas = query_utils.retrieve_obser_periods()
             # Initialize an empty set and update with existing values
