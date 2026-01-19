@@ -29,6 +29,17 @@ class Condition(ETLEntity):
         """Ensure start and end dates are in datetime format."""
         self._source_data['condition_start_datetime'] = pd.to_datetime(self._source_data['start'], errors='coerce')
         self._source_data['condition_end_datetime'] = pd.to_datetime(self._source_data['stop'], errors='coerce')
+        missing_start = self._source_data['condition_start_datetime'].isna() & self._source_data['condition_end_datetime'].notna()
+        self._source_data.loc[missing_start, 'condition_start_datetime'] = self._source_data.loc[missing_start, 'condition_end_datetime']
+        missing_end = self._source_data['condition_end_datetime'].isna() & self._source_data['condition_start_datetime'].notna()
+        self._source_data.loc[missing_end, 'condition_end_datetime'] = self._source_data.loc[missing_end, 'condition_start_datetime']
+        invalid_range = (
+            self._source_data['condition_end_datetime'].notna()
+            & self._source_data['condition_start_datetime'].notna()
+            & (self._source_data['condition_end_datetime'] < self._source_data['condition_start_datetime'])
+        )
+        self._source_data.loc[invalid_range, 'condition_end_datetime'] = self._source_data.loc[invalid_range, 'condition_start_datetime']
+        self._source_data = self._source_data.dropna(subset=['condition_start_datetime'])
         self._source_data['condition_start_date'] = self._source_data['condition_start_datetime'].dt.date
         self._source_data['condition_end_date'] = self._source_data['condition_end_datetime'].dt.date
 

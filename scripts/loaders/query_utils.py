@@ -451,6 +451,21 @@ class QueryUtils:
             queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'drug_era')
         
         return queried_data_pandas
+
+    def retrieve_dose_era(self):
+        """Retrieve existing dose era records."""
+        query = f"SELECT dose_era_id FROM {self._schema}.dose_era"
+        queried_data = self._db_connector.querySql(
+            connection=self._conn,
+            sql=query
+        )
+        queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
+        queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
+
+        if not queried_data_pandas.empty:
+            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'dose_era')
+
+        return queried_data_pandas
     
     def unique_id_generator(self, source_id, source_type):
         """Generate a unique identifier.

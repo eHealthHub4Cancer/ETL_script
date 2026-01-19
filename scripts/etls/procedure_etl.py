@@ -29,6 +29,17 @@ class Procedure(ETLEntity):
         """Ensure start and end dates are in datetime format."""
         self._source_data['procedure_datetime'] = pd.to_datetime(self._source_data['start'], errors='coerce')
         self._source_data['procedure_end_datetime'] = pd.to_datetime(self._source_data['stop'], errors='coerce')
+        missing_start = self._source_data['procedure_datetime'].isna() & self._source_data['procedure_end_datetime'].notna()
+        self._source_data.loc[missing_start, 'procedure_datetime'] = self._source_data.loc[missing_start, 'procedure_end_datetime']
+        missing_end = self._source_data['procedure_end_datetime'].isna() & self._source_data['procedure_datetime'].notna()
+        self._source_data.loc[missing_end, 'procedure_end_datetime'] = self._source_data.loc[missing_end, 'procedure_datetime']
+        invalid_range = (
+            self._source_data['procedure_end_datetime'].notna()
+            & self._source_data['procedure_datetime'].notna()
+            & (self._source_data['procedure_end_datetime'] < self._source_data['procedure_datetime'])
+        )
+        self._source_data.loc[invalid_range, 'procedure_end_datetime'] = self._source_data.loc[invalid_range, 'procedure_datetime']
+        self._source_data = self._source_data.dropna(subset=['procedure_datetime'])
         self._source_data['procedure_date'] = self._source_data['procedure_datetime'].dt.date
         self._source_data['procedure_end_date'] = self._source_data['procedure_end_datetime'].dt.date
 

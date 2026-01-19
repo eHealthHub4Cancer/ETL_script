@@ -12,8 +12,15 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-condition_window_size = os.getenv("CONDITION_WINDOW")
-condition_window_size = int(condition_window_size)
+
+def _get_int_env(name: str, default: int) -> int:
+    value = os.getenv(name, str(default))
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+condition_window_size = _get_int_env("CONDITION_WINDOW", 30)
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)  # Use DEBUG level for detailed logging
@@ -73,7 +80,7 @@ class LoadCondition(LoadOmoppedData):
             # combine person_id, condition_concept_id, start_date, and end_date to generate condition_era_id
             sorted_data['condition_era_source'] = sorted_data[['person_id', 'condition_concept_id', 'condition_era_start_date', 'condition_era_end_date']].astype(str).agg('_'.join, axis=1)
             # generate condition_era_id
-            sorted_data['condition_era_id'] = sorted_data['condition_era_source'].apply(query_utils.unique_id_generator, source_type='drug era')
+            sorted_data['condition_era_id'] = sorted_data['condition_era_source'].apply(query_utils.unique_id_generator, source_type='condition era')
             # get past condition era records
             queried_condition_era = query_utils.retrieve_condition_era()
             existing_condition_era = set(queried_condition_era['condition_era_id'])
