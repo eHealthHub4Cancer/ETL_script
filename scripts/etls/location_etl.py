@@ -18,7 +18,7 @@ class Location(ETLEntity):
 
     def _generate_ids(self):
         # create another field here, call it lat_lon
-        self._source_data['zip'] = self._source_data['zip'].astype(str)
+        self._source_data['zip'] = self._source_data['zip'].fillna('').astype(str)
         self._source_data['zip'] = self._source_data['zip'].apply(self.remove_non_alphanumeric)
         self._source_data['location_id'] = self._source_data['zip'].apply(self.unique_id_generator, source_type='location')
 

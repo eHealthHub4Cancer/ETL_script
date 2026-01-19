@@ -17,7 +17,7 @@ class CareSite(ETLEntity):
             logging.error(f"Error during care site data mapping: {e}")
             
     def _generate_ids(self):
-        self._source_data['zip'] = self._source_data['zip'].astype(str)
+        self._source_data['zip'] = self._source_data['zip'].fillna('').astype(str)
         self._source_data['zip'] = self._source_data['zip'].apply(self.remove_non_alphanumeric)
         self._source_data['organization'] = self._source_data['organization'].apply(self.remove_non_alphanumeric)
         self._source_data['care_site_id'] = self._source_data['organization'].apply(self.unique_id_generator, source_type='care site')

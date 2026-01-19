@@ -48,6 +48,7 @@ class Observation(ETLEntity):
     def _handle_dates(self):
         """Ensure start and end dates are in datetime format."""
         self._source_data['observation_datetime'] = pd.to_datetime(self._source_data['date'], errors='coerce')
+        self._source_data = self._source_data.dropna(subset=['observation_datetime'])
         self._source_data['observation_date'] = self._source_data['observation_datetime'].dt.date
                 
     def _generate_ids(self):

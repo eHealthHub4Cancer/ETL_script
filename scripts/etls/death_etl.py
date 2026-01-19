@@ -12,6 +12,7 @@ class Death(ETLEntity):
         try:
             self._remove_non_death_records()
             self._handle_dates()
+            self._filter_death_before_birth()
             self._set_source_values()
             logging.info("Death data mapped successfully.")
         except Exception as e:
@@ -27,6 +28,16 @@ class Death(ETLEntity):
         self._source_data = self._source_data.dropna(subset=['death_datetime'])
         # convert to date
         self._source_data['death_date'] = self._source_data['death_datetime'].dt.date
+
+    def _filter_death_before_birth(self):
+        """Remove records where death occurs before birth."""
+        if 'birthdate' not in self._source_data.columns:
+            return
+        self._source_data['birth_datetime'] = pd.to_datetime(self._source_data['birthdate'], errors='coerce')
+        valid_birth = self._source_data['birth_datetime'].notna()
+        valid_death = self._source_data['death_datetime'].notna()
+        invalid_mask = valid_birth & valid_death & (self._source_data['death_datetime'] < self._source_data['birth_datetime'])
+        self._source_data = self._source_data.loc[~invalid_mask]
         
     def _set_source_values(self):
         """Set source values for OMOP mapping."""

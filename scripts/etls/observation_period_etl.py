@@ -20,6 +20,13 @@ class ObservationPeriod(ETLEntity):
         self._source_data['start'] = pd.to_datetime(self._source_data['start'], errors='coerce')
         self._source_data['stop'] = pd.to_datetime(self._source_data['stop'], errors='coerce')
         self._source_data['period_type_concept_id'] = 32827
+        missing_start = self._source_data['start'].isna() & self._source_data['stop'].notna()
+        self._source_data.loc[missing_start, 'start'] = self._source_data.loc[missing_start, 'stop']
+        missing_end = self._source_data['stop'].isna() & self._source_data['start'].notna()
+        self._source_data.loc[missing_end, 'stop'] = self._source_data.loc[missing_end, 'start']
+        invalid_range = self._source_data['stop'].notna() & self._source_data['start'].notna() & (self._source_data['stop'] < self._source_data['start'])
+        self._source_data.loc[invalid_range, 'stop'] = self._source_data.loc[invalid_range, 'start']
+        self._source_data = self._source_data.dropna(subset=['start'])
 
         self._source_data = self._source_data.groupby('patient').agg(
             observation_period_start_date = ('start', 'min'),

@@ -38,6 +38,17 @@ class VisitDetail(ETLEntity):
         """Ensure start and end dates are in datetime format."""
         self._source_data['visit_detail_start_datetime'] = pd.to_datetime(self._source_data['start'], errors='coerce')
         self._source_data['visit_detail_end_datetime'] = pd.to_datetime(self._source_data['stop'], errors='coerce')
+        missing_start = self._source_data['visit_detail_start_datetime'].isna() & self._source_data['visit_detail_end_datetime'].notna()
+        self._source_data.loc[missing_start, 'visit_detail_start_datetime'] = self._source_data.loc[missing_start, 'visit_detail_end_datetime']
+        missing_end = self._source_data['visit_detail_end_datetime'].isna() & self._source_data['visit_detail_start_datetime'].notna()
+        self._source_data.loc[missing_end, 'visit_detail_end_datetime'] = self._source_data.loc[missing_end, 'visit_detail_start_datetime']
+        invalid_range = (
+            self._source_data['visit_detail_end_datetime'].notna()
+            & self._source_data['visit_detail_start_datetime'].notna()
+            & (self._source_data['visit_detail_end_datetime'] < self._source_data['visit_detail_start_datetime'])
+        )
+        self._source_data.loc[invalid_range, 'visit_detail_end_datetime'] = self._source_data.loc[invalid_range, 'visit_detail_start_datetime']
+        self._source_data = self._source_data.dropna(subset=['visit_detail_start_datetime'])
         self._source_data['visit_detail_start_date'] = self._source_data['visit_detail_start_datetime'].dt.date
         self._source_data['visit_detail_end_date'] = self._source_data['visit_detail_end_datetime'].dt.date
         
