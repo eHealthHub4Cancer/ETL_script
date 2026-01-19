@@ -50,6 +50,19 @@ class LoadVisitDetails(LoadOmoppedData):
             unique_concept_id = query_utils.retrieve_concept_id(code=unique_code, vocabulary=('SNOMED'))
             # # merge the concept id
             filtered_data['visit_detail_concept_id'] = filtered_data['visit_detail_concept_id'].map(unique_concept_id).astype(int)
+            if 'visit_detail_source_concept_id' in filtered_data.columns:
+                filtered_data['visit_detail_source_concept_id'] = filtered_data['visit_detail_source_concept_id'].astype(str)
+                unique_source_codes = filtered_data['visit_detail_source_concept_id'].unique().tolist()
+                unique_source_concept_id = query_utils.retrieve_source_concept_id(
+                    code=unique_source_codes,
+                    vocabulary=('SNOMED',),
+                )
+                filtered_data['visit_detail_source_concept_id'] = (
+                    filtered_data['visit_detail_source_concept_id']
+                    .map(unique_source_concept_id)
+                    .fillna(0)
+                    .astype(int)
+                )
             # get all care sites
             queried_care_sites = query_utils.retrieve_care_sites()
             # merge based on care site

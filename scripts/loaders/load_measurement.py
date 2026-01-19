@@ -44,6 +44,19 @@ class LoadMeasurement(LoadOmoppedData):
             unique_concept_id = query_utils.retrieve_concept_id(code=unique_code, vocabulary=('SNOMED','LOINC'))
             # merge the concept id
             filtered_data['measurement_concept_id'] = filtered_data['measurement_concept_id'].map(unique_concept_id).astype(int)
+            if 'measurement_source_concept_id' in filtered_data.columns:
+                filtered_data['measurement_source_concept_id'] = filtered_data['measurement_source_concept_id'].astype(str)
+                unique_source_codes = filtered_data['measurement_source_concept_id'].unique().tolist()
+                unique_source_concept_id = query_utils.retrieve_concept_id(
+                    code=unique_source_codes,
+                    vocabulary=('SNOMED', 'LOINC'),
+                )
+                filtered_data['measurement_source_concept_id'] = (
+                    filtered_data['measurement_source_concept_id']
+                    .map(unique_source_concept_id)
+                    .fillna(0)
+                    .astype(int)
+                )
             # convert the type concept id to string
             filtered_data['measurement_type_concept_id'] = filtered_data['measurement_type_concept_id'].astype(str)
             # get the unique concept id

@@ -108,3 +108,6 @@ class Person(ETLEntity):
         self._source_data['zip'] = self._source_data['zip'].fillna('').astype(str)
         self._source_data['zip'] = self._source_data['zip'].apply(self.remove_non_alphanumeric)
         self._source_data['location_source_value'] = self._source_data['zip'].apply(self.encrypt_value)
+        self._source_data['location_id'] = self._source_data['zip'].apply(self.unique_id_generator, source_type='location')
+        self._source_data['provider_id'] = pd.NA
+        self._source_data['care_site_id'] = pd.NA

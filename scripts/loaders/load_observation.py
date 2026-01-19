@@ -46,6 +46,19 @@ class LoadObservation(LoadOmoppedData):
             unique_concept_id = query_utils.retrieve_concept_id(code=unique_code, vocabulary=('LOINC', 'SNOMED','MeSH'))
             # merge the concept id
             filtered_data['observation_concept_id'] = filtered_data['observation_concept_id'].map(unique_concept_id).astype(int)
+            if 'observation_source_concept_id' in filtered_data.columns:
+                filtered_data['observation_source_concept_id'] = filtered_data['observation_source_concept_id'].astype(str)
+                unique_source_codes = filtered_data['observation_source_concept_id'].unique().tolist()
+                unique_source_concept_id = query_utils.retrieve_source_concept_id(
+                    code=unique_source_codes,
+                    vocabulary=('LOINC', 'SNOMED', 'MeSH'),
+                )
+                filtered_data['observation_source_concept_id'] = (
+                    filtered_data['observation_source_concept_id']
+                    .map(unique_source_concept_id)
+                    .fillna(0)
+                    .astype(int)
+                )
             # observation type concept id
             filtered_data['observation_type_concept_id'] = filtered_data['observation_type_concept_id'].astype(str)
             # get the unique types
