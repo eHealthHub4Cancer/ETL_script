@@ -3,12 +3,13 @@ import logging
 import uuid
 from typing import Optional
 from .main_etl import ETLEntity
+from .observation_measurement_utils import (
+    OBSERVATION_CATEGORY_MAP,
+    classify_measurement_rows,
+    map_category,
+)
 
 class Observation(ETLEntity):
-    CATEGORY_MAP = {
-            'health indicator': '723111000000104'
-        }
-    
     QUALITY_MAP = {
         'QOLS': 'LP156440-2',
         'QALY': '273724008',
@@ -30,9 +31,16 @@ class Observation(ETLEntity):
             logging.error(f"Error during observation data mapping: {e}")  
 
     def _set_category(self):
-        self._source_data['observation_type_concept_id'] = self._source_data['category'].map(self.CATEGORY_MAP)
-        # remove null rows
-        self._source_data = self._source_data.dropna(subset=['observation_type_concept_id'])
+        self._source_data['observation_type_concept_id'] = map_category(
+            self._source_data['category'],
+            OBSERVATION_CATEGORY_MAP,
+        )
+        self._source_data['observation_type_concept_id'] = (
+            self._source_data['observation_type_concept_id'].where(
+                self._source_data['observation_type_concept_id'].ne(0),
+                0,
+            )
+        )
     
     def _set_source_values(self):
         """Set source values for OMOP mapping."""
@@ -54,6 +62,6 @@ class Observation(ETLEntity):
                 
     def _generate_ids(self):
         self._source_data['value'] = pd.to_numeric(self._source_data['value'], errors='coerce').fillna(0.0)
-        self._source_data['category'] = self._source_data['category'].fillna('health indicator')
+        self._source_data = self._source_data[~classify_measurement_rows(self._source_data)]
         self._source_data['encounter'] = self._source_data['encounter'].fillna('3637e207-a102-5065-71b0-7420e18b1b5f')
         self._source_data['observation_id'] = self._source_data['encounter'].apply(self.unique_id_generator, source_type='observation')
