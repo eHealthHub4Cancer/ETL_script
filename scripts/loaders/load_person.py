@@ -30,13 +30,31 @@ class LoadPerson(LoadOmoppedData):
                 logging.info("No new data to insert for person; all records already exist in the target table.")
                 return
             
-            # get location ids
-            locations = query_utils.retrieve_locations()
-            # merge the data
-            filtered_data = filtered_data.merge(locations, left_on='location_source_value', right_on='location_source_value', how='left')
-            
+            if 'location_id' not in filtered_data.columns or filtered_data['location_id'].isna().all():
+                # get location ids
+                locations = query_utils.retrieve_locations()
+                # merge the data
+                filtered_data = filtered_data.merge(
+                    locations,
+                    left_on='location_source_value',
+                    right_on='location_source_value',
+                    how='left',
+                )
+            if 'location_id_x' in filtered_data.columns or 'location_id_y' in filtered_data.columns:
+                location_id = None
+                if 'location_id_x' in filtered_data.columns:
+                    location_id = filtered_data['location_id_x']
+                if 'location_id_y' in filtered_data.columns:
+                    location_id = (
+                        location_id.fillna(filtered_data['location_id_y'])
+                        if location_id is not None
+                        else filtered_data['location_id_y']
+                    )
+                if location_id is not None:
+                    filtered_data['location_id'] = location_id
+                filtered_data.drop(columns=['location_id_x', 'location_id_y'], inplace=True, errors='ignore')
             # remove the location_source_value column
-            filtered_data.drop(columns=['location_source_value'], inplace=True)
+            filtered_data.drop(columns=['location_source_value'], inplace=True, errors='ignore')
             # drop duplicates.
             filtered_data = filtered_data.drop_duplicates(subset=['person_id'], keep='first')
             # push the filtered data to the database
@@ -49,4 +67,3 @@ class LoadPerson(LoadOmoppedData):
 
         except Exception as e:
             logging.error(f"Failed to load data into table: {e}")
-

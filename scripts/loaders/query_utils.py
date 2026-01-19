@@ -74,6 +74,19 @@ class QueryUtils:
             queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'person')
 
         return queried_data_pandas
+
+    def retrieve_person_birthdates(self):
+        """Retrieve existing person records with birth datetime."""
+        query = f"SELECT person_source_value, person_id, birth_datetime FROM {self._schema}.person"
+        queried_data = self._db_connector.querySql(
+            connection=self._conn,
+            sql=query
+        )
+        queried_data_pandas = self.convert_dataframe(queried_data, direction='r_to_py')
+        queried_data_pandas.columns = queried_data_pandas.columns.str.lower()
+        if not queried_data_pandas.empty:
+            queried_data_pandas = self._csv_loader.compare_and_convert(queried_data_pandas, 'person')
+        return queried_data_pandas
     
     def retrieve_visit_occurrences(self):
         """Retrieving existing visit_occurrence records."""

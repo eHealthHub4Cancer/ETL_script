@@ -20,11 +20,19 @@ class Death(ETLEntity):
 
     def _remove_non_death_records(self):
         """Remove records that have empty death dates."""
-        self._source_data = self._source_data.dropna(subset=['deathdate'])
+        self._death_date_column = None
+        for column in ['deathdate', 'death_date', 'death_datetime', 'deathdatetime']:
+            if column in self._source_data.columns:
+                self._death_date_column = column
+                break
+        if not self._death_date_column:
+            self._source_data = self._source_data.iloc[0:0]
+            return
+        self._source_data = self._source_data.dropna(subset=[self._death_date_column])
             
     def _handle_dates(self):
         """Ensure start and end dates are in datetime format."""
-        self._source_data['death_datetime'] = pd.to_datetime(self._source_data['deathdate'], errors='coerce')
+        self._source_data['death_datetime'] = pd.to_datetime(self._source_data[self._death_date_column], errors='coerce')
         self._source_data = self._source_data.dropna(subset=['death_datetime'])
         # convert to date
         self._source_data['death_date'] = self._source_data['death_datetime'].dt.date

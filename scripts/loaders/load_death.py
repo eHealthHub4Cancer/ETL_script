@@ -21,12 +21,12 @@ class LoadDeath(LoadOmoppedData):
             queried_person = query_utils.retrieve_persons()
             # join both tables using inner join.
             self._omopped_data = self._omopped_data.merge(queried_person, on='person_source_value', how='inner')
+            # remove source columns after resolving person_id
+            self._omopped_data.drop(columns=['person_source_value'], inplace=True, errors='ignore')
             # get all death records.
             queried_deaths = query_utils.retrieve_death()
             # get unique deaths
             existing_deaths = set(queried_deaths['person_id'])
-            # drop columns that are not needed
-            self._omopped_data.drop(columns=['person_source_value'], inplace=True)            
             # Filter the new data to only include unique person_id entries            
             filtered_data = self._omopped_data[
                 ~self._omopped_data['person_id'].isin(existing_deaths)
