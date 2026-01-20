@@ -16,19 +16,28 @@ OBSERVATION_CATEGORIES = frozenset({
     'survey',
     'social-history',
 })
+QUALITY_OBSERVATION_CODES = frozenset({
+    'QOLS',
+    'QALY',
+    'DALY',
+})
 
 
 def normalize_category(series: pd.Series) -> pd.Series:
     return series.fillna('').astype(str).str.strip().str.lower()
 
 
+def normalize_code(series: pd.Series) -> pd.Series:
+    return series.fillna('').astype(str).str.strip().str.upper()
+
+
 def classify_measurement_rows(source_data: pd.DataFrame) -> pd.Series:
     categories = normalize_category(source_data['category'])
+    codes = normalize_code(source_data['code'])
     has_measurement_category = categories.isin(MEASUREMENT_CATEGORIES)
     has_observation_category = categories.isin(OBSERVATION_CATEGORIES)
-    value_numeric = pd.to_numeric(source_data['value'], errors='coerce').notna()
-    has_units = source_data['units'].fillna('').astype(str).str.strip().ne('')
-    return has_measurement_category | (~has_observation_category & value_numeric & has_units)
+    has_quality_code = codes.isin(QUALITY_OBSERVATION_CODES)
+    return (has_measurement_category & ~has_observation_category) & ~has_quality_code
 
 
 def map_category(series: pd.Series, category_map: dict) -> pd.Series:
