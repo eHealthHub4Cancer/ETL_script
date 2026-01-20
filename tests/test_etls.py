@@ -134,3 +134,22 @@ def test_measurement_and_observation_drop_missing_dates():
     mapped_observation = _run_etl(Observation, observation_data)
     assert len(mapped_measurement) == 1
     assert len(mapped_observation) == 1
+
+
+def test_quality_scores_remain_observations():
+    data = pd.DataFrame(
+        {
+            "patient": ["p1"],
+            "date": ["2020-01-01"],
+            "category": ["procedure"],
+            "description": ["Quality of life score"],
+            "code": ["QOLS"],
+            "value": ["5"],
+            "units": ["score"],
+            "encounter": ["e1"],
+        }
+    )
+    mapped_measurement = _run_etl(ObserMeasurement, data)
+    mapped_observation = _run_etl(Observation, data)
+    assert mapped_measurement.empty
+    assert len(mapped_observation) == 1
